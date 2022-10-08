@@ -2,7 +2,7 @@ import { ActionPanel, Action, List } from "@raycast/api";
 import { usePromise, Response } from "@raycast/utils";
 import { useEffect, useState } from "react";
 import { URLSearchParams } from "node:url";
-import { find, SfRecord } from "./salesforce";
+import { find, SalesforceRecord } from "./salesforce";
 
 export default function Command() {
   const [query, setQuery] = useState("")
@@ -19,21 +19,23 @@ export default function Command() {
     >
       <List.Section title="Results" subtitle={data?.length + ""}>
         {data?.map((record) => (
-          <SearchListItem key={record.Id} record={record} />
+          <SearchListItem key={record.id} record={record} />
         ))}
       </List.Section>
     </List>
   );
 }
 
-function SearchListItem({ record }: { record: SfRecord }) {
+function SearchListItem({ record }: { record: SalesforceRecord }) {
   return (
     <List.Item
-      title={record.Name}
+      title={record.name}
+      subtitle={record.type}
+      icon={record.iconUrl ? { source: record.iconUrl } : undefined}
       actions={
         <ActionPanel>
           <ActionPanel.Section>
-            <Action.OpenInBrowser title="Open in Browser" url={record.attributes.url} />
+            <Action.OpenInBrowser title="Open in Browser" url={record.url} />
           </ActionPanel.Section>
         </ActionPanel>
       }
