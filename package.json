@@ -2,7 +2,7 @@
   "$schema": "https://www.raycast.com/schemas/extension.json",
   "name": "salesforce",
   "title": "Salesforce",
-  "description": "Search for Salesforce objects like Accounts, Contacts, …",
+  "description": "Search for Salesforce objects like accounts and contacts.",
   "icon": "command-icon.png",
   "author": "sven",
   "categories": [
@@ -13,14 +13,59 @@
     {
       "name": "index",
       "title": "Search",
-      "subtitle": "Subtitle",
-      "description": "Template for showing typeahead search with network results.",
+      "subtitle": "Search Salesforce objects",
+      "description": "Search for Salesforce objects like accounts and contacts.",
       "mode": "view"
+    }
+  ],
+  "preferences": [
+    {
+      "type": "textfield",
+      "name": "domain",
+      "title": "Domain",
+      "description": "Your domain in <domain>.my.salesforce.com",
+      "required": true
+    },
+    {
+      "type": "textfield",
+      "name": "clientId",
+      "title": "Client ID",
+      "description": "The app's client ID (see extension's documentation)",
+      "required": true
+    },
+    {
+      "type": "password",
+      "name": "clientSecret",
+      "title": "Client secret",
+      "description": "The app's client secret (see extension's documentation)",
+      "required": true
+    },
+    {
+      "type": "textfield",
+      "name": "username",
+      "title": "Username",
+      "description": "Your username",
+      "required": true
+    },
+    {
+      "type": "password",
+      "name": "password",
+      "title": "Password",
+      "description": "Your password",
+      "required": true
+    },
+    {
+      "type": "password",
+      "name": "securityToken",
+      "title": "Security token",
+      "description": "Your security token (see extension's documentation)",
+      "required": true
     }
   ],
   "dependencies": {
     "@raycast/api": "^1.40.1",
-    "@raycast/utils": "^1.3.1"
+    "@raycast/utils": "^1.3.1",
+    "node-fetch": "^3.2.10"
   },
   "devDependencies": {
     "@types/node": "16.10.3",
