@@ -69,6 +69,7 @@ async function login(): Promise<string | never> {
         const json = await response.json() as any
         const accessToken = json.access_token
         if (!accessToken) throw Error("Login failed")
+        log(accessToken)
         await LocalStorage.setItem(storage.accessToken, accessToken)
         storeIconUrls()
         return accessToken
