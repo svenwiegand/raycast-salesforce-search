@@ -101,7 +101,7 @@ async function get<T>(urlPath: string, params?: { [key: string]: any }): Promise
         }
     })
     if (response.status === 401) {
-        login()
+        await login()
         return get(urlPath, params)
     } else if (response.status >= 400) {
         log(response.status)
