@@ -13,7 +13,7 @@
     {
       "name": "index",
       "title": "Search",
-      "subtitle": "Search Salesforce objects",
+      "subtitle": "Search Salesforce",
       "description": "Search for Salesforce objects like accounts and contacts.",
       "mode": "view"
     }
