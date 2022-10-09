@@ -23,6 +23,7 @@ export interface SfRecord {
 }
 
 const prefs = getPreferenceValues()
+const domain = prefs.domain as string
 const additionalObjects = prefs.additionalObjects ? (prefs.additionalObjects as string).split(",").map(s => s.trim()) : []
 const objects = ['Account', 'Contact', 'Opportunity', ... additionalObjects]
 const storage = {
@@ -66,7 +67,7 @@ async function accessToken(): Promise<string | never> {
 }
 
 function apiUrl(path: string, queryParams?: { [key: string]: any }): string {
-    const url = new URL(path, `https://${prefs.domain}.my.salesforce.com`).toString()
+    const url = new URL(path, `https://${domain}.my.salesforce.com`).toString()
     const params = new URLSearchParams(queryParams).toString()
     return url + (params.length > 0 ? `?${params}` : "")
 }
@@ -114,7 +115,6 @@ export async function getObjects(): Promise<SfObject[]> {
         iconUrl: r.result.themeInfo.iconUrl,
         iconColor: r.result.themeInfo.color,
     }))
-    log(objs)
     return objs
 }
 
@@ -136,6 +136,6 @@ export async function find(query: string, filterObjectName?: string): Promise<Sf
         id: r.Id, 
         objectApiName: r.attributes.type,
         name: r.Name, 
-        url: r.attributes.url, 
+        url: `https://${domain}.lightning.force.com/lightning/r/${r.attributes.type}/${r.Id}/view`, 
     }) as SfRecord)
 }
