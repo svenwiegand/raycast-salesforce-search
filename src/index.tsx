@@ -24,7 +24,7 @@ export default function Command() {
     apiName, 
     object: objectByName?.get(apiName)?.[0],
     records: recordsByObject?.get(apiName)
-  })) : undefined
+  })).sort((a, b) => a.object && b.object ? a.object?.label.localeCompare(b.object?.label || "") : 0) : undefined
   return (
     <List
       isLoading={isLoading}
