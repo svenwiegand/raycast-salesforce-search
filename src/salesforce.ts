@@ -7,41 +7,19 @@ interface Attributes {
     url: string
 }
 
-interface SfRecord {
-    attributes: Attributes
-    Name: string
-    Id: string
+export interface SfObject {
+    apiName: string
+    label: string
+    labelPlural: string
+    iconUrl: string
+    iconColor: string
 }
 
-interface IconRecord {
-    attributes: Attributes
-    TabDefinitionId: string
-    Url: string
-    ContentType: string
-    Height: number
-}
-
-interface ObjectIconUrls {
-    attributes: Attributes
-    Icons: {
-        records: IconRecord[]
-    }
-}
-
-interface QueryResult<T> {
-    records: T[]
-}
-
-interface SearchResult<T> {
-    searchRecords: T[]
-}
-
-export interface SalesforceRecord {
+export interface SfRecord {
     id: string
-    type: string
+    objectApiName: string
     name: string
     url: string
-    iconUrl?: string
 }
 
 const prefs = getPreferenceValues()
@@ -71,7 +49,6 @@ async function login(): Promise<string | never> {
         if (!accessToken) throw Error("Login failed")
         log(accessToken)
         await LocalStorage.setItem(storage.accessToken, accessToken)
-        storeIconUrls()
         return accessToken
     }
     catch (error) {
@@ -112,29 +89,52 @@ async function get<T>(urlPath: string, params?: { [key: string]: any }): Promise
     }
 }
 
-async function storeIconUrls() {
-    const objs = objects.map(obj => `'${obj}'`).join(", ")
-    const q = `SELECT (SELECT FIELDS(ALL) FROM Icons LIMIT 200) FROM TabDefinition where SobjectName IN (${objs})`
-    const result = await get<QueryResult<ObjectIconUrls>>("/services/data/v55.0/query/", { q })
-    result.records.forEach(obj => {
-        const icon = obj.Icons.records.find((icon) => icon.ContentType === "image/svg+xml")
-        if (icon) {
-            LocalStorage.setItem(storage.icon(icon.TabDefinitionId), icon.Url)
-        }
-    })
+export async function getObjects(): Promise<SfObject[]> {
+    interface Result {
+        results: {
+            result: {
+                apiName: string
+                label: string
+                labelPlural: string
+                themeInfo: {
+                    iconUrl: string
+                    color: string
+                }
+            }
+        }[]
+    }
+
+    const objNames = objects.join(",")
+    const result = await get<Result>(`/services/data/v54.0/ui-api/object-info/batch/${objNames}`)
+    const objs = result.results.map(r => ({
+        apiName: r.result.apiName,
+        label: r.result.label,
+        labelPlural: r.result.labelPlural,
+        iconUrl: r.result.themeInfo.iconUrl,
+        iconColor: r.result.themeInfo.color,
+    }))
+    log(objs)
+    return objs
 }
 
-export async function find(query: string): Promise<SalesforceRecord[]> {
+export async function find(query: string, filterObjectName?: string): Promise<SfRecord[]> {
+    interface Result {
+        searchRecords: {
+            attributes: Attributes
+            Name: string
+            Id: string
+        }[]
+    }
+
     if (query.length < 3) return []
-    const objFields = objects.map(obj => `${obj}(id, name)`).join(", ")
+    const objs = filterObjectName ? [filterObjectName] : objects
+    const objFields = objs.map(obj => `${obj}(id, name)`).join(", ")
     const q = `FIND {${query}} IN NAME FIELDS RETURNING ${objFields} LIMIT 20`
-    const records = await get<SearchResult<SfRecord>>("/services/data/v55.0/search/", { q })
-    const result = records.searchRecords.map(async (r) => ({ 
+    const records = await get<Result>("/services/data/v55.0/search/", { q })
+    return records.searchRecords.map(r => ({ 
         id: r.Id, 
-        type: r.attributes.type,
+        objectApiName: r.attributes.type,
         name: r.Name, 
         url: r.attributes.url, 
-        iconUrl: await LocalStorage.getItem<string>(storage.icon(r.attributes.type))
-    }))
-    return Promise.all(result)
+    }) as SfRecord)
 }
