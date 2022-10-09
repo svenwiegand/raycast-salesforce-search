@@ -60,6 +60,13 @@
       "title": "Security token",
       "description": "Your security token (see extension's documentation)",
       "required": true
+    },
+    {
+      "type": "textfield",
+      "name": "additionalObjects",
+      "title": "Additional object types",
+      "description": "Additional object types to search (comma separated list of API names)",
+      "required": false
     }
   ],
   "dependencies": {

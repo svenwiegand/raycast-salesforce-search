@@ -23,7 +23,8 @@ export interface SfRecord {
 }
 
 const prefs = getPreferenceValues()
-const objects = ['Account', 'Contact', 'Opportunity']
+const additionalObjects = prefs.additionalObjects ? (prefs.additionalObjects as string).split(",").map(s => s.trim()) : []
+const objects = ['Account', 'Contact', 'Opportunity', ... additionalObjects]
 const storage = {
     accessToken: "accessToken",
     icon: (obj: string) => `icon${obj}`,
