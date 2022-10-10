@@ -1,7 +1,7 @@
 import { Action, ActionPanel, Icon, Image, List } from "@raycast/api";
 import { usePromise } from "@raycast/utils";
 import { Key, useState } from "react";
-import { find, getObjects, SfObject, SfRecord } from "./salesforce";
+import { find, getObjects, SfObject, SfRecord } from "./salesforce-api";
 
 export default function Command() {
   const [query, setQuery] = useState("")

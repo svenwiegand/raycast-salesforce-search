@@ -3,7 +3,7 @@
   "name": "salesforce",
   "title": "Salesforce",
   "description": "Search for Salesforce objects like accounts and contacts.",
-  "icon": "command-icon.png",
+  "icon": "salesforce.png",
   "author": "sven",
   "categories": [
     "Applications"
@@ -12,6 +12,7 @@
   "commands": [
     {
       "name": "search",
+      "icon": "search.png",
       "title": "Search",
       "subtitle": "Search Salesforce",
       "description": "Search for Salesforce objects like accounts and contacts.",

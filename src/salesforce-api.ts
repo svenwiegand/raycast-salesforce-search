@@ -29,7 +29,7 @@ const objects = ['Account', 'Contact', 'Opportunity', ... additionalObjects]
 const oauthClient = new OAuth.PKCEClient({
     redirectMethod: OAuth.RedirectMethod.Web,
     providerName: "Salesforce",
-    providerIcon: "command-icon.png",
+    providerIcon: "salesforce.png",
     description: "Connect your Salesforce account …",
 })
 
