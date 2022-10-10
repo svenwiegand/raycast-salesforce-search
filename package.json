@@ -11,7 +11,7 @@
   "license": "MIT",
   "commands": [
     {
-      "name": "index",
+      "name": "search",
       "title": "Search",
       "subtitle": "Search Salesforce",
       "description": "Search for Salesforce objects like accounts and contacts.",
