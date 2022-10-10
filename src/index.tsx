@@ -1,6 +1,6 @@
 import { Action, ActionPanel, Icon, List } from "@raycast/api";
 import { usePromise } from "@raycast/utils";
-import { useState } from "react";
+import { Key, useState } from "react";
 import { find, getObjects, SfObject, SfRecord } from "./salesforce";
 
 export default function Command() {
@@ -9,39 +9,37 @@ export default function Command() {
   const { data: objects } = usePromise(getObjects, [])
   const { isLoading, data: records } = usePromise(find, [query, (filterObjectName && filterObjectName !== "") ? filterObjectName : undefined])
 
-  const objectByName = group(objects, obj => obj.apiName)
-  const filterList =
-    <List.Dropdown
-      tooltip="Filter by object"
-      storeValue={true}
-      onChange={setFilterObjectName}>
-        <List.Dropdown.Item title="All object types" value="" icon={Icon.StarCircle} />
-        {objects?.map(obj => <FilterItem key={obj.apiName} object={obj}/>)}
-    </List.Dropdown>
-
-  const recordsByObject = group(records, r => r.objectApiName)
-  const sections = recordsByObject ? Array.from(recordsByObject?.keys(), apiName => ({ 
-    apiName, 
-    object: objectByName?.get(apiName)?.[0],
-    records: recordsByObject?.get(apiName)
-  })).sort((a, b) => a.object && b.object ? a.object?.label.localeCompare(b.object?.label || "") : 0) : undefined
+  const sections = records && objects ? recordSections(records, objects) : undefined
   return (
     <List
       isLoading={isLoading}
       onSearchTextChange={setQuery}
       searchBarPlaceholder="Search Salesforce"
-      searchBarAccessory={filterList}
+      searchBarAccessory={<FilterList objects={objects} onChange={setFilterObjectName}/>}
       throttle
     >
       {sections?.map(section =>
-        <List.Section key={section.apiName} title={section.object?.labelPlural}>
+        <List.Section key={section.object.apiName} title={section.object?.labelPlural}>
           {section?.records?.map((record) => (
-            <RecordItem key={record.id} record={record} object={objectByName?.get(record.objectApiName)?.[0]} />
+            <RecordItem key={record.id} record={record} object={section.object} />
           ))}
         </List.Section>
       )}
     </List>
   );
+}
+
+function FilterList({ objects, onChange }: { objects?: SfObject[], onChange: (objectApiName: string) => void }) {
+  const objectsSortedByLabel = objects?.sort((a, b) => a.labelPlural.localeCompare(b.labelPlural))
+  return (
+    <List.Dropdown
+      tooltip="Filter by object"
+      storeValue={true}
+      onChange={onChange}>
+      <List.Dropdown.Item title="All object types" value="" icon={Icon.StarCircle} />
+      {objectsSortedByLabel?.map(obj => <FilterItem key={obj.apiName} object={obj} />)}
+    </List.Dropdown>
+  )
 }
 
 function FilterItem({ object }: { object: SfObject }) {
@@ -71,13 +69,20 @@ function RecordItem({ record, object }: { record: SfRecord, object?: SfObject })
   );
 }
 
-function group<T, Key>(items: T[] | undefined, keyOf: (item: T) => Key): Map<Key, T[]> | undefined {
-  if (items) {
-    return items?.reduce(
-      (map: Map<Key, T[]>, item: T) => map.set(keyOf(item), [...map.get(keyOf(item)) || [], item]),
-      new Map()
-    )
-  } else {
-    return undefined
-  }
+function recordSections(records: SfRecord[], objects: SfObject[]): { object: SfObject, records: SfRecord[] }[] {
+  const sectionKeys = keysOf(records, rec => rec.objectApiName)
+  const sections = sectionKeys.map(key => ({
+    object: objects.find(o => o.apiName === key)!,
+    records: records.filter(r => r.objectApiName === key)
+  }))
+  const sorted = sections.sort((a, b) => a.object.apiName.localeCompare(b.object.apiName))
+  return sorted
+}
+
+function keysOf<Item, Key>(items: Item[], keyOf: (item: Item) => Key): Key[] {
+  const set = items.reduce(
+    (set: Set<Key>, item: Item) => set.add(keyOf(item)),
+    new Set()
+  )
+  return Array.from(set)
 }
