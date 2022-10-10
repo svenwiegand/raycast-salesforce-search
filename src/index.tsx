@@ -1,4 +1,4 @@
-import { Action, ActionPanel, Icon, List } from "@raycast/api";
+import { Action, ActionPanel, Icon, Image, List } from "@raycast/api";
 import { usePromise } from "@raycast/utils";
 import { Key, useState } from "react";
 import { find, getObjects, SfObject, SfRecord } from "./salesforce";
@@ -47,7 +47,10 @@ function FilterItem({ object }: { object: SfObject }) {
     <List.Dropdown.Item
       title={object.labelPlural}
       value={object.apiName}
-      icon={object.iconUrl}
+      icon={{
+        source: object.iconUrl,
+        tintColor: object.iconColor,
+      }}
     />
   )
 }
@@ -57,7 +60,10 @@ function RecordItem({ record, object }: { record: SfRecord, object?: SfObject })
     <List.Item
       title={record.name}
       subtitle={object?.label}
-      icon={object?.iconUrl}
+      icon={object ? {
+        source: object.iconUrl,
+        tintColor: object.iconColor,
+      } : undefined}
       actions={
         <ActionPanel>
           <ActionPanel.Section>
