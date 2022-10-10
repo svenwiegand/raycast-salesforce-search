@@ -1,5 +1,5 @@
-import fetch, { FetchError, FormData } from "node-fetch"
-import { LocalStorage, getPreferenceValues } from "@raycast/api"
+import fetch, { FormData } from "node-fetch"
+import { getPreferenceValues, OAuth } from "@raycast/api"
 import { log } from "./log"
 
 interface Attributes {
@@ -26,44 +26,65 @@ const prefs = getPreferenceValues()
 const domain = prefs.domain as string
 const additionalObjects = prefs.additionalObjects ? (prefs.additionalObjects as string).split(",").map(s => s.trim()) : []
 const objects = ['Account', 'Contact', 'Opportunity', ... additionalObjects]
-const storage = {
-    accessToken: "accessToken",
-    icon: (obj: string) => `icon${obj}`,
+const oauthClient = new OAuth.PKCEClient({
+    redirectMethod: OAuth.RedirectMethod.Web,
+    providerName: "Salesforce",
+    providerIcon: "command-icon.png",
+    description: "Connect your Salesforce account …",
+})
+
+interface RequestTokenWithCode {
+    grantType: "authorization_code"
+    authRequest: OAuth.AuthorizationRequest
+    authorizationCode: string
+}
+interface RequestTokenWithRefreshToken {
+    grantType: "refresh_token"
+    refreshToken: string
+}
+async function requestTokens(options: RequestTokenWithCode | RequestTokenWithRefreshToken): Promise<string> {
+    log(`requesting token using grantType ${options.grantType}`)
+    const url = `https://login.salesforce.com/services/oauth2/token`
+    const form = new FormData()
+    form.append("grant_type", options.grantType)
+    form.append("client_id", prefs.clientId)
+    if (options.grantType === "authorization_code") {
+        form.append("code", options.authorizationCode)
+        form.append("code_verifier", options.authRequest.codeVerifier)
+        form.append("redirect_uri", options.authRequest.redirectURI)
+    } else {
+        form.append("refresh_token", options.refreshToken)
+    }
+    const response = await fetch(url, {
+        method: "POST",
+        body: form,
+    })
+    const tokenSet = (await response.json()) as OAuth.TokenResponse
+    log(tokenSet)
+    oauthClient.setTokens(tokenSet)
+    return tokenSet.access_token
 }
 
-async function login(): Promise<string | never> {
-    try {
-        log("login")
-        LocalStorage.clear()
-        const url = `https://login.salesforce.com/services/oauth2/token`
-        const form = new FormData()
-        form.append("grant_type", "password")
-        form.append("client_id", prefs.clientId)
-        form.append("client_secret", prefs.clientSecret)
-        form.append("username", prefs.username)
-        form.append("password", prefs.password + prefs.securityToken)
-        const response = await fetch(url, {
-            method: "POST",
-            body: form,
-        })
-        const json = await response.json() as any
-        const accessToken = json.access_token
-        if (!accessToken) throw Error("Login failed")
-        log(accessToken)
-        await LocalStorage.setItem(storage.accessToken, accessToken)
-        return accessToken
-    }
-    catch (error) {
-        if (error instanceof FetchError)
-            throw Error("Check your network connection")
-        else
-            throw error
-    }
+async function login(): Promise<string> {
+    log("oauthLogin")
+    const authRequest = await oauthClient.authorizationRequest({
+        endpoint: `https://${domain}.my.salesforce.com/services/oauth2/authorize`,
+        clientId: prefs.clientId,
+        scope: "refresh_token api",
+    })
+    const { authorizationCode } = await oauthClient.authorize(authRequest)
+    return requestTokens({grantType: "authorization_code", authRequest, authorizationCode})
 }
 
-async function accessToken(): Promise<string | never> {
-    const token = await LocalStorage.getItem<string>(storage.accessToken)
-    return token ?? login()
+async function accessToken(): Promise<string> {
+    const tokenSet = await oauthClient.getTokens()
+    if (tokenSet?.accessToken && !tokenSet.isExpired()) {
+        return tokenSet.accessToken
+    } else if (tokenSet?.refreshToken) {
+        return requestTokens({ grantType: "refresh_token", refreshToken: tokenSet.refreshToken })
+    } else {
+        return login()
+    }
 }
 
 function apiUrl(path: string, queryParams?: { [key: string]: any }): string {
@@ -79,10 +100,7 @@ async function get<T>(urlPath: string, params?: { [key: string]: any }): Promise
             Authorization: `Bearer ${await accessToken()}`
         }
     })
-    if (response.status === 401) {
-        await login()
-        return get(urlPath, params)
-    } else if (response.status >= 400) {
+    if (response.status >= 400) {
         log(response.status)
         log(await response.text())
         throw Error(`Request failed with status code ${response.status}`)
