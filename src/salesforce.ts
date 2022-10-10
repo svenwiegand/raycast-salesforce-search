@@ -128,9 +128,11 @@ export async function find(query: string, filterObjectName?: string): Promise<Sf
     }
 
     if (query.length < 3) return []
+    const sanitizedQuery = query.replaceAll(/([?&|!{}[\]()^~*:\\"'+-])/g, "\\$1")
+    log(sanitizedQuery)
     const objs = filterObjectName ? [filterObjectName] : objects
     const objFields = objs.map(obj => `${obj}(id, name)`).join(", ")
-    const q = `FIND {${query}} IN ALL FIELDS RETURNING ${objFields} LIMIT 20`
+    const q = `FIND {${sanitizedQuery}} IN ALL FIELDS RETURNING ${objFields} LIMIT 20`
     const records = await get<Result>("/services/data/v55.0/search/", { q })
     return records.searchRecords.map(r => ({ 
         id: r.Id, 
