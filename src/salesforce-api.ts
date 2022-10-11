@@ -61,7 +61,7 @@ async function requestTokens(options: RequestTokenWithCode | RequestTokenWithRef
     })
     const tokenSet = (await response.json()) as OAuth.TokenResponse
     log(tokenSet)
-    oauthClient.setTokens(tokenSet)
+    await oauthClient.setTokens(tokenSet)
     return tokenSet.access_token
 }
 
@@ -91,13 +91,13 @@ async function refreshToken(): Promise<string> {
     return accessToken(true)
 }
 
-function apiUrl(path: string, queryParams?: { [key: string]: any }): string {
+function apiUrl(path: string, queryParams?: { [key: string]: string }): string {
     const url = new URL(path, `https://${domain}.my.salesforce.com`).toString()
     const params = new URLSearchParams(queryParams).toString()
     return url + (params.length > 0 ? `?${params}` : "")
 }
 
-async function get<T>(urlPath: string, params?: { [key: string]: any }): Promise<T> {
+async function get<T>(urlPath: string, params?: { [key: string]: string }): Promise<T> {
     const response = await fetch(apiUrl(urlPath, params), {
         method: "GET",
         headers: {
