@@ -36,10 +36,10 @@ export default function Command() {
 }
 
 function FilterList({objects, onChange}: { objects: SfObject[], onChange: (objectApiName: string) => void }) {
-    const objectsSortedByLabel = objects.sort((a, b) => a.labelPlural.localeCompare(b.labelPlural))
-    const categoryItems = (category: SfObject["category"]) =>
-        objectsSortedByLabel.filter(o => o.category === category).map(obj => <FilterItem key={obj.apiName}
-                                                                                         object={obj}/>)
+    const sortedByLabel = objects.sort((a, b) => a.labelPlural.localeCompare(b.labelPlural))
+    const categoryItems = (category: SfObject["category"]) => sortedByLabel
+        .filter(o => o.category === category)
+        .map(obj => <FilterItem key={obj.apiName} object={obj}/>)
     const recordObjects = categoryItems("record")
     const reportingObjects = categoryItems("reporting")
     return (
@@ -48,8 +48,8 @@ function FilterList({objects, onChange}: { objects: SfObject[], onChange: (objec
             storeValue={true}
             onChange={onChange}>
             <List.Dropdown.Item title="All object types" value="" icon={Icon.StarCircle}/>
-            <List.Dropdown.Section title={"Record Types"} children={recordObjects}/>
             <List.Dropdown.Section title={"Reporting"} children={reportingObjects}/>
+            <List.Dropdown.Section title={"Record Types"} children={recordObjects}/>
         </List.Dropdown>
     )
 }
@@ -87,11 +87,19 @@ function RecordItem({record, object}: { record: SfRecord, object?: SfObject }) {
     );
 }
 
-function recordSections(records: SfRecord[], objects: SfObject[]): { object: SfObject, records: SfRecord[] }[] {
+type RecordSection = { object: SfObject, records: SfRecord[] }
+function recordSections(records: SfRecord[], objects: SfObject[]): RecordSection[] {
     const sectionKeys = keysOf(records, rec => rec.objectApiName)
     const sections = sectionKeys.map(key => ({
         object: objects.find(o => o.apiName === key)!, // eslint-disable-line
         records: records.filter(r => r.objectApiName === key)
     }))
-    return sections.sort((a, b) => a.object.apiName.localeCompare(b.object.apiName))
+    const compare = (a: RecordSection, b: RecordSection) => {
+        if (a.object.category !== b.object.category) {
+            return a.object.category === "reporting" ? -1 : 1
+        } else {
+            return a.object.apiName.localeCompare(b.object.apiName)
+        }
+    }
+    return sections.sort(compare)
 }
