@@ -1,4 +1,4 @@
-import {getPreferenceValues} from "@raycast/api";
+import {getPreferenceValues} from "@raycast/api"
 
 interface Preferences {
     domain: string

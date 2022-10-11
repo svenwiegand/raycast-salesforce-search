@@ -1,7 +1,7 @@
 import fetch from "node-fetch"
 import {log} from "../util/log"
-import {prefs} from "./preferences";
-import {salesfoceClient} from "./login";
+import {prefs} from "./preferences"
+import {salesfoceClient} from "./login"
 
 function apiUrl(path: string, queryParams?: { [key: string]: string }): string {
     const url = new URL(path, `https://${prefs.domain}.my.salesforce.com`).toString()

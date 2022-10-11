@@ -2,7 +2,7 @@ import {Action, ActionPanel, Icon, List} from "@raycast/api"
 import {usePromise} from "@raycast/utils"
 import {useState} from "react"
 import {find, getObjects, SfObject, SfRecord} from "./salesforce/search"
-import {keysOf} from "./util/collections";
+import {keysOf} from "./util/collections"
 
 export default function Command() {
     const [query, setQuery] = useState("")
@@ -32,7 +32,7 @@ export default function Command() {
                 </List.Section>
             )}
         </List>
-    );
+    )
 }
 
 function FilterList({objects, onChange}: { objects: SfObject[], onChange: (objectApiName: string) => void }) {
@@ -84,7 +84,7 @@ function RecordItem({record, object}: { record: SfRecord, object?: SfObject }) {
                 </ActionPanel>
             }
         />
-    );
+    )
 }
 
 type RecordSection = { object: SfObject, records: SfRecord[] }

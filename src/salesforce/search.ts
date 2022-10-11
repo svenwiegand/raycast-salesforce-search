@@ -1,6 +1,6 @@
-import {prefs} from "./preferences";
-import {mapToObject} from "../util/collections";
-import {get} from "./api";
+import {prefs} from "./preferences"
+import {mapToObject} from "../util/collections"
+import {get} from "./api"
 
 export interface SfObject {
     category: "record" | "reporting"
