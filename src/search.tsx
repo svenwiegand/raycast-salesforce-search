@@ -1,7 +1,7 @@
-import { Action, ActionPanel, Icon, Image, List } from "@raycast/api";
-import { usePromise } from "@raycast/utils";
-import { Key, useState } from "react";
-import { find, getObjects, SfObject, SfRecord } from "./salesforce-api";
+import {Action, ActionPanel, Icon, List} from "@raycast/api"
+import {usePromise} from "@raycast/utils"
+import {useState} from "react"
+import {find, getObjects, SfObject, SfRecord} from "./salesforce-api"
 
 export default function Command() {
   const [query, setQuery] = useState("")
@@ -9,13 +9,14 @@ export default function Command() {
   const { data: objects } = usePromise(getObjects, [])
   const { isLoading, data: records } = usePromise(find, [query, (filterObjectName && filterObjectName !== "") ? filterObjectName : undefined])
 
+  const filterList = objects && objects.length > 0 ? <FilterList objects={objects} onChange={setFilterObjectName}/> : undefined
   const sections = records && objects ? recordSections(records, objects) : undefined
   return (
     <List
       isLoading={isLoading}
       onSearchTextChange={setQuery}
       searchBarPlaceholder="Search Salesforce"
-      searchBarAccessory={<FilterList objects={objects} onChange={setFilterObjectName}/>}
+      searchBarAccessory={filterList}
       throttle
     >
       {sections?.map(section =>
