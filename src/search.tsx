@@ -1,7 +1,7 @@
 import {Action, ActionPanel, Icon, List} from "@raycast/api"
 import {usePromise} from "@raycast/utils"
 import {useState} from "react"
-import {find, getObjects, SfObject, SfRecord} from "./salesforce-api"
+import {find, getObjects, SfObject, SfRecord} from "./salesforce/search"
 
 export default function Command() {
   const [query, setQuery] = useState("")
@@ -30,15 +30,20 @@ export default function Command() {
   );
 }
 
-function FilterList({ objects, onChange }: { objects?: SfObject[], onChange: (objectApiName: string) => void }) {
-  const objectsSortedByLabel = objects?.sort((a, b) => a.labelPlural.localeCompare(b.labelPlural))
+function FilterList({ objects, onChange }: { objects: SfObject[], onChange: (objectApiName: string) => void }) {
+  const objectsSortedByLabel = objects.sort((a, b) => a.labelPlural.localeCompare(b.labelPlural))
+  const categoryItems = (category: SfObject["category"]) =>
+      objectsSortedByLabel.filter(o => o.category === category).map(obj => <FilterItem key={obj.apiName} object={obj}/>)
+  const recordObjects = categoryItems("record")
+  const reportingObjects = categoryItems("reporting")
   return (
     <List.Dropdown
-      tooltip="Filter by object"
+      tooltip="Filter Results by Type"
       storeValue={true}
       onChange={onChange}>
       <List.Dropdown.Item title="All object types" value="" icon={Icon.StarCircle} />
-      {objectsSortedByLabel?.map(obj => <FilterItem key={obj.apiName} object={obj} />)}
+      <List.Dropdown.Section title={"Record Types"} children={recordObjects}/>
+      <List.Dropdown.Section title={"Reporting"} children={reportingObjects}/>
     </List.Dropdown>
   )
 }
