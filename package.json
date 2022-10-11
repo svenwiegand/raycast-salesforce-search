@@ -2,20 +2,21 @@
   "$schema": "https://www.raycast.com/schemas/extension.json",
   "name": "salesforce",
   "title": "Salesforce Search",
-  "description": "Search for Salesforce objects like accounts and contacts.",
+  "description": "Search for Salesforce records like accounts and contacts and dashboards and reports.",
   "icon": "salesforce.png",
   "author": "sven",
   "categories": [
-    "Applications"
+    "Applications",
+    "Productivity"
   ],
   "license": "MIT",
   "commands": [
     {
-      "name": "search",
+      "name": "command",
       "icon": "salesforce.png",
-      "title": "Search",
+      "title": "Search Records & Reports",
       "subtitle": "Salesforce",
-      "description": "Search for Salesforce objects like accounts and contacts.",
+      "description": "Search for Salesforce objects like accounts and contacts and dashboards and reports.",
       "mode": "view"
     }
   ],
@@ -24,7 +25,7 @@
       "type": "textfield",
       "name": "domain",
       "title": "Domain",
-      "description": "Your domain in <domain>.my.salesforce.com",
+      "description": "Your my-domain in <domain>.my.salesforce.com",
       "required": true
     },
     {
@@ -38,8 +39,8 @@
       "type": "textfield",
       "name": "additionalObjects",
       "title": "Additional object types",
-      "placeholder": "CustomObjectA__c,CustomObjectB__c",
-      "description": "Additional object types to search (comma separated list of API names)",
+      "placeholder": "CustObjA__c, CustObjB__c(title), …",
+      "description": "Additional object types to search (see extension's documentation for exact syntax)",
       "required": false
     }
   ],
