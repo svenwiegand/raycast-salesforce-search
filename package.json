@@ -1,7 +1,7 @@
 {
   "$schema": "https://www.raycast.com/schemas/extension.json",
   "name": "salesforce",
-  "title": "Salesforce",
+  "title": "Salesforce Search",
   "description": "Search for Salesforce objects like accounts and contacts.",
   "icon": "salesforce.png",
   "author": "sven",
@@ -12,9 +12,9 @@
   "commands": [
     {
       "name": "search",
-      "icon": "search.png",
+      "icon": "salesforce.png",
       "title": "Search",
-      "subtitle": "Search Salesforce",
+      "subtitle": "Salesforce",
       "description": "Search for Salesforce objects like accounts and contacts.",
       "mode": "view"
     }
@@ -30,8 +30,8 @@
     {
       "type": "textfield",
       "name": "clientId",
-      "title": "Client ID",
-      "description": "The client ID of the Raycast app in Salesforce (see extension's documentation)",
+      "title": "Consumer Key",
+      "description": "The consumer key of the Raycast app in Salesforce (see extension's documentation)",
       "required": true
     },
     {
