@@ -2,6 +2,7 @@ import {Action, ActionPanel, Icon, List} from "@raycast/api"
 import {usePromise} from "@raycast/utils"
 import {useState} from "react"
 import {find, getObjects, SfObject, SfRecord} from "./salesforce/search"
+import {keysOf} from "./util/collections";
 
 export default function Command() {
   const [query, setQuery] = useState("")
@@ -88,12 +89,4 @@ function recordSections(records: SfRecord[], objects: SfObject[]): { object: SfO
     records: records.filter(r => r.objectApiName === key)
   }))
   return sections.sort((a, b) => a.object.apiName.localeCompare(b.object.apiName))
-}
-
-function keysOf<Item, Key>(items: Item[], keyOf: (item: Item) => Key): Key[] {
-  const set = items.reduce(
-    (set: Set<Key>, item: Item) => set.add(keyOf(item)),
-    new Set()
-  )
-  return Array.from(set)
 }
