@@ -20,10 +20,12 @@ interface RequestTokenWithCode {
     authRequest: OAuth.AuthorizationRequest
     authorizationCode: string
 }
+
 interface RequestTokenWithRefreshToken {
     grantType: "refresh_token"
     refreshToken: string
 }
+
 async function requestTokens(options: RequestTokenWithCode | RequestTokenWithRefreshToken): Promise<string> {
     log(`requesting token using grantType ${options.grantType}`)
     const url = `https://login.salesforce.com/services/oauth2/token`
@@ -54,7 +56,7 @@ async function login(): Promise<string> {
         clientId: prefs.clientId,
         scope: "refresh_token api",
     })
-    const { authorizationCode } = await oauthClient.authorize(authRequest)
+    const {authorizationCode} = await oauthClient.authorize(authRequest)
     return requestTokens({grantType: "authorization_code", authRequest, authorizationCode})
 }
 
@@ -63,7 +65,7 @@ async function accessToken(refresh?: boolean): Promise<string> {
     if (!refresh && tokenSet?.accessToken && !tokenSet.isExpired()) {
         return tokenSet.accessToken
     } else if (tokenSet?.refreshToken) {
-        return requestTokens({ grantType: "refresh_token", refreshToken: tokenSet.refreshToken })
+        return requestTokens({grantType: "refresh_token", refreshToken: tokenSet.refreshToken})
     } else {
         return login()
     }

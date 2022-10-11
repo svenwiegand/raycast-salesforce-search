@@ -19,7 +19,8 @@ export async function get<T>(urlPath: string, params?: { [key: string]: string }
     if (response.status === 401) {
         await salesfoceClient.refreshToken()
         return get(urlPath, params)
-    } if (response.status >= 400) {
+    }
+    if (response.status >= 400) {
         log(response.status)
         log(await response.text())
         throw Error(`Request failed with status code ${response.status}`)

@@ -48,7 +48,7 @@ const reportingObjects: SfObject[] = [
     },
 ]
 
-function parseObjectSpec(objectSpec: string, dynamicMetadata= true): ObjectSpec {
+function parseObjectSpec(objectSpec: string, dynamicMetadata = true): ObjectSpec {
     const pattern = /^(?<apiName>[a-zA-Z_]+)(?:\((?<nameField>[a-zA-Z_]+)\))?$/
     const match = pattern.exec(objectSpec)
     if (!match || !match.groups) {
@@ -113,7 +113,7 @@ export async function find(query: string, filterObjectName?: string): Promise<Sf
     const nameFieldByObj = mapToObject(filteredObjectSpecs, item => item.apiName, item => item.nameField)
     const objFields = filteredObjectSpecs.map(os => `${os.apiName}(id, ${os.nameField})`).join(", ")
     const q = `FIND {${sanitizeSoslQuery(query)}} IN ALL FIELDS RETURNING ${objFields} LIMIT 20`
-    const records = await get<Result>("/services/data/v55.0/search/", { q })
+    const records = await get<Result>("/services/data/v55.0/search/", {q})
     return records.searchRecords.map(r => ({
         id: r.Id,
         objectApiName: r.attributes.type,
