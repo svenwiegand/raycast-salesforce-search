@@ -79,11 +79,10 @@ function RecordItem({ record, object }: { record: SfRecord, object?: SfObject })
 function recordSections(records: SfRecord[], objects: SfObject[]): { object: SfObject, records: SfRecord[] }[] {
   const sectionKeys = keysOf(records, rec => rec.objectApiName)
   const sections = sectionKeys.map(key => ({
-    object: objects.find(o => o.apiName === key)!,
+    object: objects.find(o => o.apiName === key)!, // eslint-disable-line
     records: records.filter(r => r.objectApiName === key)
   }))
-  const sorted = sections.sort((a, b) => a.object.apiName.localeCompare(b.object.apiName))
-  return sorted
+  return sections.sort((a, b) => a.object.apiName.localeCompare(b.object.apiName))
 }
 
 function keysOf<Item, Key>(items: Item[], keyOf: (item: Item) => Key): Key[] {
