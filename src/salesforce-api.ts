@@ -76,15 +76,19 @@ async function login(): Promise<string> {
     return requestTokens({grantType: "authorization_code", authRequest, authorizationCode})
 }
 
-async function accessToken(): Promise<string> {
+async function accessToken(refresh?: boolean): Promise<string> {
     const tokenSet = await oauthClient.getTokens()
-    if (tokenSet?.accessToken && !tokenSet.isExpired()) {
+    if (!refresh && tokenSet?.accessToken && !tokenSet.isExpired()) {
         return tokenSet.accessToken
     } else if (tokenSet?.refreshToken) {
         return requestTokens({ grantType: "refresh_token", refreshToken: tokenSet.refreshToken })
     } else {
         return login()
     }
+}
+
+async function refreshToken(): Promise<string> {
+    return accessToken(true)
 }
 
 function apiUrl(path: string, queryParams?: { [key: string]: any }): string {
@@ -100,7 +104,10 @@ async function get<T>(urlPath: string, params?: { [key: string]: any }): Promise
             Authorization: `Bearer ${await accessToken()}`
         }
     })
-    if (response.status >= 400) {
+    if (response.status === 401) {
+        await refreshToken()
+        return get(urlPath, params)
+    } if (response.status >= 400) {
         log(response.status)
         log(await response.text())
         throw Error(`Request failed with status code ${response.status}`)
@@ -126,14 +133,13 @@ export async function getObjects(): Promise<SfObject[]> {
 
     const objNames = objects.join(",")
     const result = await get<Result>(`/services/data/v54.0/ui-api/object-info/batch/${objNames}`)
-    const objs = result.results.map(r => ({
+    return result.results.map(r => ({
         apiName: r.result.apiName,
         label: r.result.label,
         labelPlural: r.result.labelPlural,
         iconUrl: r.result.themeInfo.iconUrl,
         iconColor: r.result.themeInfo.color,
     }))
-    return objs
 }
 
 export async function find(query: string, filterObjectName?: string): Promise<SfRecord[]> {
