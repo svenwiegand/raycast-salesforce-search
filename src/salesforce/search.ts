@@ -15,19 +15,21 @@ export interface SfRecord {
     id: string
     objectApiName: string
     name: string
+    subtitle?: string
     url: string
 }
 
 interface ObjectSpec {
     apiName: string
     nameField: string
+    subtitleField: string
     dynamicMetadata: boolean
 }
 
 const objectSpecs = [
-    ...parseObjectSpecs(["Account", "Contact", "Opportunity"]),
+    ...parseObjectSpecs(["Account", "Contact(Name,Account.Name)", "Opportunity"]),
     ...parseObjectSpecs(["Dashboard(Title)", "Report"], false),
-    ...parseCommaSeparatedObjectSpecs(prefs.additionalObjects as string)
+    ...parseSemicolonSeparatedObjectSpecs(prefs.additionalObjects as string)
 ]
 const reportingObjects: SfObject[] = [
     {
@@ -49,7 +51,7 @@ const reportingObjects: SfObject[] = [
 ]
 
 function parseObjectSpec(objectSpec: string, dynamicMetadata = true): ObjectSpec {
-    const pattern = /^(?<apiName>[a-zA-Z_]+)(?:\((?<nameField>[a-zA-Z_]+)\))?$/
+    const pattern = /^(?<apiName>[a-zA-Z_]+)(?:\((?<nameField>[a-zA-Z_.]+)(?: *, *(?<subtitleField>[a-zA-Z_.]+))?\))?$/
     const match = pattern.exec(objectSpec)
     if (!match || !match.groups) {
         throw Error(`Invalid object specification '${objectSpec}'. See documentation for details.`)
@@ -57,6 +59,7 @@ function parseObjectSpec(objectSpec: string, dynamicMetadata = true): ObjectSpec
     return {
         apiName: match.groups.apiName,
         nameField: match.groups.nameField ?? "Name",
+        subtitleField: match.groups.subtitleField,
         dynamicMetadata,
     }
 }
@@ -65,8 +68,8 @@ function parseObjectSpecs(objectSpecs: string[], dynamicMetadata = true): Object
     return objectSpecs.map(os => parseObjectSpec(os, dynamicMetadata))
 }
 
-function parseCommaSeparatedObjectSpecs(objectSpecs: string, dynamicMetadata = true): ObjectSpec[] {
-    const specs = objectSpecs.split(",").map(s => s.trim()).filter(s => s.length > 0)
+function parseSemicolonSeparatedObjectSpecs(objectSpecs: string, dynamicMetadata = true): ObjectSpec[] {
+    const specs = objectSpecs.split(";").map(s => s.trim()).filter(s => s.length > 0)
     return parseObjectSpecs(specs, dynamicMetadata)
 }
 
@@ -110,18 +113,39 @@ export async function find(query: string, filterObjectName?: string): Promise<Sf
 
     if (query.length < 3) return []
     const filteredObjectSpecs = filterObjectName ? objectSpecs.filter(os => os.apiName === filterObjectName) : objectSpecs
-    const nameFieldByObj = mapToObject(filteredObjectSpecs, item => item.apiName, item => item.nameField)
-    const objFields = filteredObjectSpecs.map(os => `${os.apiName}(id, ${os.nameField})`).join(", ")
+    const fieldPathByObject = mapToObject(
+        filteredObjectSpecs,
+        item => item.apiName,
+        item => ({nameField: item.nameField, subtitleField: item.subtitleField}))
+    const fieldSpec = (os: ObjectSpec) => {
+        const fields = ['id', os.nameField, os.subtitleField].filter(f => f)
+        return `${os.apiName}(${fields.join(", ")})`
+    }
+    const objFields = filteredObjectSpecs.map(fieldSpec).join(", ")
     const q = `FIND {${sanitizeSoslQuery(query)}} IN ALL FIELDS RETURNING ${objFields} LIMIT 20`
     const records = await get<Result>("/services/data/v55.0/search/", {q})
     return records.searchRecords.map(r => ({
         id: r.Id,
         objectApiName: r.attributes.type,
-        name: (r as any)[nameFieldByObj[r.attributes.type]],  // eslint-disable-line
+        name: propAtPath(r, fieldPathByObject[r.attributes.type].nameField),
+        subtitle: propAtPath(r, fieldPathByObject[r.attributes.type].subtitleField),
         url: `https://${prefs.domain}.lightning.force.com/lightning/r/${r.attributes.type}/${r.Id}/view`,
     }) as SfRecord)
 }
 
 function sanitizeSoslQuery(query: string): string {
     return query.replaceAll(/([?&|!{}[\]()^~*:\\"'+-])/g, "\\$1")
+}
+
+type NestedStringMap = { [key in string]: string | NestedStringMap }
+function propAtPath(object: NestedStringMap, path?: string): string | NestedStringMap | undefined {
+    if (!path) return undefined
+    const pathSegments = path.split(".")
+    const reducer = (prev: NestedStringMap | string | undefined, prop: string) => {
+        switch (typeof prev) {
+            case "object": return prev[prop]
+            default: return prev
+        }
+    }
+    return pathSegments?.reduce(reducer, object)
 }

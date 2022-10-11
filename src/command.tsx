@@ -71,7 +71,7 @@ function RecordItem({record, object}: { record: SfRecord, object?: SfObject }) {
     return (
         <List.Item
             title={record.name}
-            subtitle={object?.label}
+            subtitle={record.subtitle}
             icon={object ? {
                 source: object.iconUrl,
                 tintColor: object.iconColor,
