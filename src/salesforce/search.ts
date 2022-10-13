@@ -196,7 +196,7 @@ function propAtPath(object: NestedStringMap, path?: string): string | NestedStri
   const reducer = (prev: NestedStringMap | string | undefined, prop: string) => {
     switch (typeof prev) {
       case "object":
-        return prev[prop];
+        return prev[prop] ?? undefined;
       default:
         return prev;
     }
