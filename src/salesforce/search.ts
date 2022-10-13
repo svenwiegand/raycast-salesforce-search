@@ -29,7 +29,7 @@ interface ObjectSpec {
 const objectSpecs = [
   ...parseObjectSpecs(["Account", "Contact(Name,Account.Name)", "Opportunity"]),
   ...parseObjectSpecs(["Dashboard(Title)", "Report"], false),
-  ...parseSemicolonSeparatedObjectSpecs(prefs.additionalObjects as string),
+  ...(prefs.additionalObjects ? parseSemicolonSeparatedObjectSpecs(prefs.additionalObjects) : []),
 ];
 const reportingObjects: SfObject[] = [
   {
